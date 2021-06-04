@@ -90,11 +90,11 @@ interest = float(args.interest)
 
 
 def main():
-    if not interest:
+    if interest == 0:
         return "The interest value is required. Use --help to learn more."
     elif (payment < 0) or (principal < 0) or (periods < 0) or (interest < 0):
         return "Negative values are not accepted"
-    elif (type_loan == "diff") and principal != 0 and periods != 0 and interest != 0:
+    elif (type_loan == "diff") and (principal != 0) and (periods != 0):
         # !TODO calculate the number of payments and the overpayment
         ans = "\n"
         overpayment = -1 * principal
@@ -105,36 +105,62 @@ def main():
             ans += f"Month {m} payment is {m_payment}\n"
         ans += f"\nOverpayment = {int(overpayment)}"
         return ans
+    elif (type_loan == "annuity") and (principal != 0) and (periods != 0):
+        ann_payment = ordinary_annuity(principal, nominal_interest(interest), periods)
+        ann_payment = math.ceil(ann_payment)
+        overpayment = ann_payment*periods - principal
+        ans = ""
+        ans += f"Your annuity payment = {int(ann_payment)}\n"
+        ans += f"Overpayment = {int(overpayment)}\n"
+        return ans
+    elif (type_loan == "annuity") and (payment != 0) and (periods != 0):
+        ann_principal = loan_principal(payment, nominal_interest(interest), periods)
+        ann_principal = math.ceil(ann_principal)
+        overpayment = payment*periods - ann_principal
+        ans = ""
+        ans += f"Your loan principal = {int(ann_principal)}\n"
+        ans += f"Overpayment = {int(overpayment)}"
+        return ans
+    elif (type_loan == "annuity") and (principal != 0) and (payment != 0):
+        n_payments = number_of_payments(principal, nominal_interest(interest), payment)
+        n_payments = math.ceil(n_payments)
+        years = int(n_payments // 12)
+        months = int(n_payments)
+        if n_payments < 12:
+            msg = f"{months} months"
+        elif n_payments % 12 == 0:
+            msg = f"{years} years"
+        else:
+            msg = f"{years} years and {months} months"
+        overpayment = n_payments*payment - principal
+        ans = f"It will take {msg} to repay the loan!\n"
+        ans += f"Overpayment = {int(overpayment)}"
+        return ans
+
     return "Incorrect parameters submitted. Use --help to learn more."
 
 
 if __name__ == "__main__":
-    # print(f"type={type_loan}, principal={principal}, periods={periods}, interest={interest}")
     response = main()
     print(response)
-# need the argument type (two options annuity or diff, else error "Incorrect Parameters")
-# --payment is the monthly payment amount for diff this is an invalid parameter and should return error
-# --principal is used for calculation of both type of payment
-# --periods denotes the number of months needed to repay the loan
-# --interest is annual interest rate (percentage), must always be provided
-# for differentiated payment, you need 4 out of 5 arguments
 
-# !TODO
-# example 2: python creditcalc.py --type=annuity --principal=1000000 --periods=60 --interest=10
-# output 2: Your annuity payment = 21248! ... Overpayment = 274880
+# !TODO Create a function to handle annuity cases and another to handle diff cases
 
-# example 5: python creditcalc.py --type=annuity --payment=8722 --periods=120 --interest=5.6
-# output 5: Your loan principal = 800018! ... Overpayment = 246622
-
-# example 6: python creditcalc.py --type=annuity --principal=500000 --payment=23000 --interest=7.8
-# It will take 2 years to repay this loan! ... Overpayment = 52000
-
-# !DONE
+# Test cases
 # example 1: python creditcalc.py --type=diff --principal=1000000 --periods=10 --interest=10
 # output 1: Month 1: payment is 108334 ... Month 2: payment is 107500
+
+# example 2: python creditcalc.py --type=annuity --principal=1000000 --periods=60 --interest=10
+# output 2: Your annuity payment = 21248! ... Overpayment = 274880
 
 # example 3: python creditcalc.py --type=diff --principal=1000000 --payment=104000
 # output 3: Incorrect parameters
 
 # example 4: python creditcalc.py --type=diff --principal=500000 --periods=8 --interest=7.8
 # output 4: Month 1: payment is 65750 ... Overpayment = 14628
+
+# example 5: python creditcalc.py --type=annuity --payment=8722 --periods=120 --interest=5.6
+# output 5: Your loan principal = 800018! ... Overpayment = 246622
+
+# example 6: python creditcalc.py --type=annuity --principal=500000 --payment=23000 --interest=7.8
+# It will take 2 years to repay this loan! ... Overpayment = 52000
