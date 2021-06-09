@@ -15,7 +15,7 @@ class Domino:
         self.__ai_pieces = []
 
     @property
-    def status(self):
+    def turn(self):
         return self.__turn
 
     @property
@@ -76,30 +76,56 @@ class Domino:
         elif self.__turn == "player":
             self.__turn = "computer"
 
-    def add_piece(self, side: str, piece: list[int]) -> str:
-        if side == "R":
-            self.__snake
-        return ""
+    def add_piece(self, side: str, piece: list[int]) -> bool:
+        if side == "R" and self.__snake[-1][1] in piece:
+            self.__snake.append(piece)
+            if self.__snake[-2][1] != self.__snake[-1][0]:
+                self.__snake[-1].reverse()
+            return True
+        elif side == "L" and self.__snake[0][0] in piece:
+            self.__snake.insert(0, piece)
+            if self.__snake[0][1] != self.__snake[1][0]:
+                self.__snake[0].reverse()
+            return True
+        return False
 
-    def move(self, player: str, piece: int, side: str) -> str:
+    def move(self, player: str, piece_loc: int, side: str) -> str:
         # takes the piece to input (by index) and append it to the snake
         # if cannot do return message
         # switches the turn
-        check_number = self.__snake[0][0] if side == "L" else self.__snake[-1][-1]
         if player == "player":
-            move_piece = self.__player_pieces[piece]
-            del self.__player_pieces[piece]
+            move_piece = self.__player_pieces[piece_loc]
+            del self.__player_pieces[piece_loc]
         elif player == "computer":
-            move_piece = self.__ai_pieces[piece]
-            del self.__ai_pieces[piece]
+            move_piece = self.__ai_pieces[piece_loc]
+            del self.__ai_pieces[piece_loc]
 
-        # Check if the move is possible
-        if check_number in move_piece:
+        # Make the move
+        add_response = self.add_piece(side, move_piece)
 
-            self.__snake.insert(0, move_piece) if side == "L" else self.__snake.append(move_piece)
+        # If the piece was added, return good message and switch turn
+        if add_response:
+            self.switch_turn()
+            return f"Correctly added {move_piece} to the domino snake"
+        # If the move cannot be made put back the piece and return bad message
+        if player == "player":
+            self.__player_pieces.append(move_piece)
+        elif player == "computer":
+            self.__ai_pieces.append(move_piece)
 
-        # switch turn
-        return ""
+        return "The move cannot be made. Check the parameters inputted."
+
+    def stalemate(self) -> bool:
+        is_stalemate = True
+        # If a move can be made, there is no stalemate
+        for piece in self.__ai_pieces:
+            if self.add_piece("R", piece) or self.add_piece("L", piece):
+                return False
+        for piece in self.__player_pieces:
+            if self.add_piece("R", piece) or self.add_piece("L", piece):
+                return False
+
+        return is_stalemate
 
 
 def game_status(domino: Domino) -> str:
@@ -116,13 +142,31 @@ def game_status(domino: Domino) -> str:
     return ans
 
 
+def make_move(domino: Domino):
+    move = input("Enter the piece number of the stack and the direction e.g. 6R (piece 6 right side):\n")
+    piece_loc = int(move[0]) - 1
+    piece_side = move[1]
+    player = domino.turn
+
+    resp = domino.move(player, piece_loc, piece_side)
+
+    return resp
+
+
 if __name__ == "__main__":
     domino_game = Domino()
     domino_game.shuffle_pieces()
     response = domino_game.start_game()
     print(response)
+    turn = domino_game.turn
     game = True
     while game:
         response = game_status(domino_game)
         print(response)
+
         game = False
+
+
+# !TODO Create an function that returns True if the game is in a stalemate
+# !TODO If the game is not on a stalemate continue the game
+# !TODO function to take user input and make the move
