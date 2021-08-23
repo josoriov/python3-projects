@@ -1,7 +1,7 @@
 import random
 
 # Constants
-header = "="*70
+header = "\n\n" + "="*70 + "\n\n"
 status = None
 
 
@@ -77,6 +77,7 @@ class Domino:
         """
         Takes a piece and a side and add it to the ledger
         If the piece cannot be added, it returns False
+
         :param side: side in which to add the piece L or R
         :param piece: A piece too ad to the ledger
         :return: bool on whether the piece could be added or not
@@ -96,6 +97,7 @@ class Domino:
     def remove_player_piece(self, piece: list[int]) -> bool:
         """
         Try to removes the parameter piece from the player's ledger
+
         :param piece: the piece to remove
         :return: bool on whether the piece was removed or not
         """
@@ -109,6 +111,7 @@ class Domino:
     def remove_ai_piece(self, piece: list[int]) -> bool:
         """
         Try to removes the parameter piece from the AI's ledger
+
         :param piece: the piece to remove
         :return: bool on whether the piece was removed or not
         """
@@ -153,9 +156,9 @@ def game_status(domino: Domino) -> None:
     :return None
     """
     print(header)
-    print(f"Stock pieces: {domino.stock_pieces}")
+    # print(f"Stock pieces: {domino.stock_pieces}")
     print(f"Player's pieces: {domino.player_pieces}")
-    print(f"AI's pieces: {domino.ai_pieces}")
+    print(f"AI's pieces: {len(domino.ai_pieces)}")
     print(f"Ledger: {domino.ledger}")
     print(f"Player's turn: {domino.player_turn}")
     print(f"Consecutive pass(es): {domino.consecutive_pass}")
@@ -181,7 +184,7 @@ def player_move(domino: Domino) -> bool:
             domino.remove_player_piece(player_pieces[move_index])
             return True
         else:
-            print("The chosen move was not possible, please try again!\n")
+            print("\n\nThe chosen move was not possible, please try again!")
     else:
         print("You decided to pass on your turn!")
         domino.player_turn = False
@@ -211,7 +214,7 @@ def ai_move(domino: Domino) -> bool:
     for i, piece in enumerate(ai_pieces):
         scores[i] = num_counts.get(piece[0], 0) + num_counts.get(piece[1], 0)
     # sorting the dictionary of scores
-    scores = dict(sorted(scores.items(), key=lambda item: item[1], reverse=True))
+    scores = {k: v for k, v in sorted(scores.items(), key=lambda item: item[1], reverse=True)}
     # Trying moves with the highest ranked dominoes first
     for move_index, _ in scores.items():
         move_piece = ai_pieces[move_index]
@@ -231,23 +234,54 @@ def ai_move(domino: Domino) -> bool:
     return False
 
 
+def endgame(domino: Domino) -> bool:
+    """
+    Checks if the game have ended given the pieces and number of consecutive passes
+
+    :param domino: instance of the main class
+    :return: bool on whether the game ended of not
+    """
+    end_messages = {
+        "player": "\n\nThe player wins the game!\n\n",
+        "AI": "\n\nThe AI wins the game!\n\n",
+        "tie": "\n\nThe game ends in a tie!\n\n"
+    }
+    player_pieces = domino.player_pieces
+    ai_pieces = domino.ai_pieces
+    consecutive_passes = domino.consecutive_pass
+    if len(player_pieces) == 0:
+        print(end_messages["player"])
+        return True
+    elif len(ai_pieces) == 0:
+        print(end_messages["AI"])
+        return True
+    elif consecutive_passes == 2:
+        player_sum = sum(sum(x) for x in player_pieces)
+        ai_sum = sum(sum(x) for x in ai_pieces)
+        if player_sum > ai_sum:
+            print(end_messages["AI"])
+        elif player_sum < ai_sum:
+            print(end_messages["player"])
+        else:
+            print(end_messages["tie"])
+        return True
+    return False
+
+
 if __name__ == "__main__":
     domino_game = Domino()
     domino_game.start_game()
     game_status(domino_game)
-    player_turn = domino_game.player_turn
-    game_finished = False
+    game_finished = endgame(domino_game)
     while not game_finished:
+        player_turn = domino_game.player_turn
         if player_turn:
             move_finished = False
             while not move_finished:
                 game_status(domino_game)
                 move_finished = player_move(domino_game)
         else:
+            game_status(domino_game)
             ai_move(domino_game)
         game_status(domino_game)
-        game_finished = True
-
-
-# !TODO If there are two consecutive passes, check for stalemate and end the game if true
-# !TODO function to end the game
+        game_finished = endgame(domino_game)
