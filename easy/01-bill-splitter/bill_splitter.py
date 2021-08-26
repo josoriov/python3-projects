@@ -1,6 +1,3 @@
-import sys
-
-
 def number_of_friends():
     n_friends = int(input("Enter the number of friends joining (including you): "))
     return n_friends
@@ -25,8 +22,8 @@ def main():
         raise Exception("No one is joining for the party")
     names = friend_names(n_friends)
     total_bill = bill_total()
-    splitted_bill = round(total_bill/len(names), 2)
-    print({name: splitted_bill for name in names})
+    split_bill = round(total_bill/len(names), 2)
+    print({name: split_bill for name in names})
 
 
 main()
